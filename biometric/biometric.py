@@ -37,9 +37,66 @@ class Biometric:
         self.connected_flg = self.recvd_ack()
         return self.connected_flg
 
-    # def add_member(self):
-    #     packet = bytearray()
-    #     self.send_command(CMD_USER_WRQ, )
+    def enable_device(self):
+        """
+        Enables the device, puts the machine in normal operation.
+
+        :return: Bool, returns True if the device acknowledges
+        the enable command.
+        """
+        self.send_command(CMD_ENABLEDEVICE)
+        self.recv_reply()
+        return self.recvd_ack()
+
+    def disable_device(self, timer=None):
+        """
+        Disables the device, disables the fingerprint, keyboard
+        and RF card modules.
+
+        :param timer: Integer, disable timer, if it is omitted, an enable
+        command must be send to make the device return to normal operation.
+        :return: Bool, returns True if the device acknowledges
+        the disable command.
+        """
+        if timer:
+            self.send_command(CMD_DISABLEDEVICE, struct.pack('<I', timer))
+        else:
+            self.send_command(CMD_DISABLEDEVICE)
+
+        self.recv_reply()
+        return self.recvd_ack()
+
+    def disconnect(self):
+        """
+        Terminates connection with the given device.
+
+        :return: Bool, returns True if disconnection command was
+        processed successfully, also clears the flag self.connected_flg.
+        """
+        # terminate connection command
+        self.send_command(CMD_EXIT)
+        self.recv_reply()
+
+        # close connection and update flag
+        self.socket_bio.close()
+        self.connected_flg = False
+
+        return self.recvd_ack()
+
+    def add_member(self, uid, name):
+        """
+        takes parameters uid, permission token, password,
+        name, card number, group no, user timezone, timezone 1,
+        timezone 2, timezone 3, user id, fixed zeros
+
+        :param uid:
+        :param name:
+        :return:
+        """
+        data = create_user(uid, name)
+        self.send_command(CMD_USER_WRQ, data)
+        self.recv_reply()
+        self.refresh_data()
 
     def create_packet(self, cmd_code, data=None, session_id=None,
                       reply_number=None):
@@ -125,6 +182,15 @@ class Biometric:
         zkp = bytearray(zkp)
         self.parse_ans(zkp)
         self.reply_number += 1
+
+    def refresh_data(self):
+        """
+        Refresh data on device (fingerprints, user info and settings).
+
+        :return: None.
+        """
+        self.send_command(cmd=CMD_REFRESHDATA)
+        self.recv_reply()
 
     def parse_ans(self, zkp):
         """
