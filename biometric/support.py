@@ -72,3 +72,21 @@ def create_user(user_id, name):
     data[48:57] = struct.pack('<9s', str(user_id).encode('utf-8'))
 
     return data
+
+
+def request_data():
+    data = bytearray([0x00] * 284)
+
+    # insert values
+    request = '~OS=?,ExtendFmt=?,~ExtendFmt=?,ExtendOPLog=?,~ExtendOPLog=?,~Platform=?,~ZKFPVersion=?,WorkCode=?,' \
+              '~SSR=?,~PIN2Width=?,~UserExtFmt=?,BuildVersion=?,AttPhotoForSDK=?,~IsOnlyRFMachine=?,CameraOpen=?,' \
+              'CompatOldFirmware=?,IsSupportPull=?,Language=?,~SerialNumber=?,FaceFunOn=?,~DeviceName=? '
+    data[0:284] = struct.pack('<284s', request.encode('utf-8'))
+    return data
+
+
+def enroll_data(user_id, finger_index, fp_flag=1):
+    data = bytearray(struct.pack('<26s', str(user_id).encode('utf-8')))
+    data[24] = finger_index
+    data[25] = fp_flag
+    return data

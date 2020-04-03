@@ -24,4 +24,10 @@ def create_user(user_id, name):
     return data
 
 
-print(create_user(10006, 'ritesh singh'))
+def request_data():
+    data = bytearray([0x00] * 4)
+    data[0:2] = struct.pack('<H', 65535)
+    return data
+
+
+print(request_data())
