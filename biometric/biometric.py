@@ -1,7 +1,26 @@
 import socket
 from biometric.defs import *
 import struct
+import datetime
 from biometric.support import *
+
+
+def decode_time(enc_t_arr):
+    """
+    Decodes time, as given on ZKTeco get/set time commands.
+
+    :param enc_t_arr: Bytearray, with the time field stored in little endian.
+    :return: Datetime object, with the extracted date.
+    """
+    enc_t = struct.unpack('<I', enc_t_arr)[0]  # extracts the time value
+    secs = int(enc_t % 60)  # seconds
+    mins = int((enc_t / 60.) % 60)  # minutes
+    hour = int((enc_t / 3600.) % 24)  # hours
+    day = int(((enc_t / (3600. * 24.)) % 31)) + 1  # day
+    month = int(((enc_t / (3600. * 24. * 31.)) % 12)) + 1  # month
+    year = int((enc_t / (3600. * 24.)) / 365) + 2000  # year
+
+    return datetime.datetime(year, month, day, hour, mins, secs)
 
 
 class Biometric:
